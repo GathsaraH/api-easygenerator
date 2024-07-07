@@ -7,7 +7,8 @@ import {
   HttpStatus,
   Get,
   UseGuards,
-  Request
+  Request,
+  UseInterceptors
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiTags,ApiOkResponse,ApiBearerAuth } from '@nestjs/swagger';
@@ -18,6 +19,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { UserSchemaClass as User } from 'src/user/schemas/user.schemas';
 import { RefreshResponseDto } from './dto/refresh-response.dto';
 import { NullableType } from 'src/util/types/nullable.type';
+import { SanitizeMongooseModelInterceptor } from 'nestjs-mongoose-exclude';
 @ApiTags('Auth')
 @Controller({
   path: 'auth',
@@ -34,6 +36,7 @@ export class AuthController {
     type: LoginResponseDto,
   })
   @HttpCode(HttpStatus.OK)
+  @UseInterceptors(new SanitizeMongooseModelInterceptor())
   public login(@Body() loginDto: AuthLoginDto): Promise<LoginResponseDto> {
     return this.authService.validateLogin(loginDto);
   }
@@ -44,7 +47,7 @@ export class AuthController {
     return this.authService.register(dto);
   }
 
-  @ApiBearerAuth()
+  @ApiBearerAuth("JWT-auth")
   @SerializeOptions({
     groups: ['me'],
   })
@@ -58,7 +61,7 @@ export class AuthController {
     return this.authService.me(request.user);
   }
 
-  @ApiBearerAuth()
+  @ApiBearerAuth("JWT-auth")
   @ApiOkResponse({
     type: RefreshResponseDto,
   })

@@ -3,6 +3,7 @@ import { now, HydratedDocument } from 'mongoose';
 import { EntityDocumentHelper } from '../../util/document-entity-helper';
 import { ApiResponseProperty } from '@nestjs/swagger';
 import { Exclude, Expose } from 'class-transformer';
+import { ExcludeProperty } from 'nestjs-mongoose-exclude';
 
 export type UserSchemaDocument = HydratedDocument<UserSchemaClass>;
 
@@ -30,7 +31,7 @@ export class UserSchemaClass extends EntityDocumentHelper {
   })
   @Expose({ groups: ['me', 'admin'], toPlainOnly: true })
   email: string;
-  @Exclude({ toPlainOnly: true })
+  @ExcludeProperty()
   @Prop()
   password: string;
   @ApiResponseProperty()

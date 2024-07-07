@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import authConfig from './config/auth-config/auth.config';
 import { SessionModule } from './session/session.module';
+import { TerminusModule } from '@nestjs/terminus';
 
 @Module({
   imports: [
@@ -19,7 +20,8 @@ import { SessionModule } from './session/session.module';
     DatabaseModule,
     AuthModule,
     UserModule,
-    SessionModule
+    SessionModule,
+    TerminusModule
   ],
   controllers: [AppController],
   providers: [AppService],

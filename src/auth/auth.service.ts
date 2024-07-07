@@ -13,11 +13,11 @@ import { ConfigService } from '@nestjs/config';
 import { AllConfigType } from 'src/config/app-config/config.type';
 import { AuthRegisterLoginDto } from './dto/auth-register-login.dto';
 import { AuthLoginDto } from './dto/auth-login.dto';
-import bcrypt from 'bcryptjs';
+import * as bcrypt from 'bcrypt';
 import { LoginResponseDto } from './dto/login-response.dto';
-import crypto from 'crypto';
+import * as crypto from 'crypto';
 import { Session } from 'src/session/domain/session';
-import ms from 'ms';
+import  ms from 'ms';
 import { UserSchemaClass as User } from 'src/user/schemas/user.schemas';
 import { JwtRefreshPayloadType } from './strategies/types/jwt-refresh-payload.type';
 import { JwtPayloadType } from './strategies/types/jwt-payload.type';
@@ -72,11 +72,12 @@ export class AuthService {
         sessionId: session.id,
         hash,
       });
+      const { password, ...exposeUser } = user;
       return {
         refreshToken,
         token,
         tokenExpires,
-        user,
+        user
       };
     } catch (error) {
       this.logger.error(error.message);
@@ -118,88 +119,124 @@ export class AuthService {
   async refreshToken(
     data: Pick<JwtRefreshPayloadType, 'sessionId' | 'hash'>,
   ): Promise<Omit<LoginResponseDto, 'user'>> {
-    const session = await this.sessionService.findById(data.sessionId);
+    try {
+      this.logger.log(`Refreshing token for session ${data.sessionId}`);
+      const session = await this.sessionService.findById(data.sessionId);
 
-    if (!session) {
-      throw new UnauthorizedException();
+      if (!session) {
+        throw new UnauthorizedException();
+      }
+
+      if (session.hash !== data.hash) {
+        throw new UnauthorizedException();
+      }
+
+      const hash = crypto
+        .createHash('sha256')
+        .update(randomStringGenerator())
+        .digest('hex');
+
+      const user = await this.userService.findById(session.user.id);
+
+      if (!user) {
+        throw new UnauthorizedException();
+      }
+
+      await this.sessionService.update(session.id, {
+        hash,
+      });
+
+      const { token, refreshToken, tokenExpires } = await this.getTokensData({
+        id: session.user.id,
+        sessionId: session.id,
+        hash,
+      });
+
+      return {
+        token,
+        refreshToken,
+        tokenExpires,
+      };
+    } catch (error) {
+      this.logger.error(error.message);
+      throw new UnprocessableEntityException({
+        status: HttpStatus.BAD_REQUEST,
+        errors: {
+          email: error.message,
+        },
+      });
     }
-
-    if (session.hash !== data.hash) {
-      throw new UnauthorizedException();
-    }
-
-    const hash = crypto
-      .createHash('sha256')
-      .update(randomStringGenerator())
-      .digest('hex');
-
-    const user = await this.userService.findById(session.user.id);
-
-    if (!user) {
-      throw new UnauthorizedException();
-    }
-
-    await this.sessionService.update(session.id, {
-      hash,
-    });
-
-    const { token, refreshToken, tokenExpires } = await this.getTokensData({
-      id: session.user.id,
-      sessionId: session.id,
-      hash,
-    });
-
-    return {
-      token,
-      refreshToken,
-      tokenExpires,
-    };
   }
   private async getTokensData(data: {
     id: User['id'];
     sessionId: Session['id'];
     hash: Session['hash'];
   }) {
-    const tokenExpiresIn = this.configService.getOrThrow('auth.expires', {
-      infer: true,
-    });
+    try {
+      this.logger.log(`Generating tokens for user ${data.id}`);
+      const tokenExpiresIn = this.configService.getOrThrow('auth.expires', {
+        infer: true,
+      });
+      this.logger.log(`Token expires in ${tokenExpiresIn}`);
+      const tokenExpires = Date.now() + ms(tokenExpiresIn);
 
-    const tokenExpires = Date.now() + ms(tokenExpiresIn);
+      const [token, refreshToken] = await Promise.all([
+        await this.jwtService.signAsync(
+          {
+            id: data.id,
+            sessionId: data.sessionId,
+          },
+          {
+            secret: this.configService.getOrThrow('auth.secret', {
+              infer: true,
+            }),
+            expiresIn: tokenExpiresIn,
+          },
+        ),
+        await this.jwtService.signAsync(
+          {
+            sessionId: data.sessionId,
+            hash: data.hash,
+          },
+          {
+            secret: this.configService.getOrThrow('auth.refreshSecret', {
+              infer: true,
+            }),
+            expiresIn: this.configService.getOrThrow('auth.refreshExpires', {
+              infer: true,
+            }),
+          },
+        ),
+      ]);
 
-    const [token, refreshToken] = await Promise.all([
-      await this.jwtService.signAsync(
-        {
-          id: data.id,
-          sessionId: data.sessionId,
+      return {
+        token,
+        refreshToken,
+        tokenExpires,
+      };
+    } catch (error) {
+      console.log(error);
+      this.logger.error(error);
+      throw new UnprocessableEntityException({
+        status: HttpStatus.BAD_REQUEST,
+        errors: {
+          email: error.message,
         },
-        {
-          secret: this.configService.getOrThrow('auth.secret', { infer: true }),
-          expiresIn: tokenExpiresIn,
-        },
-      ),
-      await this.jwtService.signAsync(
-        {
-          sessionId: data.sessionId,
-          hash: data.hash,
-        },
-        {
-          secret: this.configService.getOrThrow('auth.refreshSecret', {
-            infer: true,
-          }),
-          expiresIn: this.configService.getOrThrow('auth.refreshExpires', {
-            infer: true,
-          }),
-        },
-      ),
-    ]);
-
-    return {
-      token,
-      refreshToken,
-      tokenExpires,
-    };
+      });
+    }
   }
   async me(userJwtPayload: JwtPayloadType): Promise<NullableType<User>> {
-    return this.userService.findById(userJwtPayload.id);
+    try {
+      this.logger.log(`Finding user by id ${userJwtPayload.id}`);
+      return await this.userService.findById(userJwtPayload.id);
+    } catch (error) {
+      this.logger.error(error.message);
+      throw new UnprocessableEntityException({
+        status: HttpStatus.BAD_REQUEST,
+        errors: {
+          id: error.message,
+        },
+      });
+    }
   }
 }
