@@ -2,8 +2,8 @@ import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 
 export const buildSwagger = (app) => {
   const config = new DocumentBuilder()
-    .setTitle("WAPP Pharmacy API Documentation")
-    .setDescription("The documentation about Wapp Pharmacy Api Documentation")
+    .setTitle("Easygenerator API Documentation")
+    .setDescription("The documentation about Easygenerator Api Documentation")
     .setVersion("1.0")
     .setContact("Gathsara Umesh", "Gathsaraumesh.com", "hello@gathsaraumesh.com")
     .addBearerAuth(
