@@ -4,10 +4,10 @@ import { EntityDocumentHelper } from '../../util/document-entity-helper';
 import { ApiResponseProperty } from '@nestjs/swagger';
 import { Exclude, Expose } from 'class-transformer';
 
-export type AuthSchemaDocument = HydratedDocument<AuthSchemaClass>;
+export type UserSchemaDocument = HydratedDocument<UserSchemaClass>;
 
 @Schema({ timestamps: true, autoCreate: true })
-export class AuthSchemaClass extends EntityDocumentHelper {
+export class UserSchemaClass extends EntityDocumentHelper {
   @ApiResponseProperty({
     type: String,
     example: 'John',
@@ -39,4 +39,4 @@ export class AuthSchemaClass extends EntityDocumentHelper {
   deletedAt: Date;
 }
 
-export const AuthSchema = SchemaFactory.createForClass(AuthSchemaClass);
+export const UserSchema = SchemaFactory.createForClass(UserSchemaClass);
