@@ -1,8 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { ApiResponseProperty } from '@nestjs/swagger';
 import mongoose, { now, HydratedDocument } from 'mongoose';
 import { UserSchemaClass } from 'src/user/schemas/user.schemas';
 import { EntityDocumentHelper } from 'src/util/document-entity-helper';
-
 
 export type SessionSchemaDocument = HydratedDocument<SessionSchemaClass>;
 
@@ -16,7 +16,10 @@ export type SessionSchemaDocument = HydratedDocument<SessionSchemaClass>;
 export class SessionSchemaClass extends EntityDocumentHelper {
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'UserSchemaClass' })
   user: UserSchemaClass;
-
+  @ApiResponseProperty({
+    type: String,
+  })
+  _id: string;
   @Prop()
   hash: string;
 

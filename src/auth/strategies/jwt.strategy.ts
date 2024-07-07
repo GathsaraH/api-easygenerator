@@ -15,7 +15,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     });
   }
 
-  public validate(payload: JwtPayloadType): OrNeverType<JwtPayloadType> {
+  public validate(payload: any): OrNeverType<JwtPayloadType> {
     if (!payload._id) {
       throw new UnauthorizedException();
     }

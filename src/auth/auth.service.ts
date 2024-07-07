@@ -69,7 +69,7 @@ export class AuthService {
 
       const { token, refreshToken, tokenExpiresIn } = await this.getTokensData({
         id: user._id,
-        sessionId: session.id,
+        sessionId: session._id,
         hash,
       });
       return {
@@ -140,14 +140,14 @@ export class AuthService {
       if (!user) {
         throw new UnauthorizedException();
       }
-      this.logger.debug(`Updating session ${session.id} with new hash ${hash}`);
-      await this.sessionService.update(session.id, {
+      this.logger.debug(`Updating session ${session._id} with new hash ${hash}`);
+      await this.sessionService.update(session._id, {
         hash,
       });
 
       const { token, refreshToken, tokenExpiresIn } = await this.getTokensData({
         id: session.user._id,
-        sessionId: session.id,
+        sessionId: session._id,
         hash,
       });
 
@@ -168,7 +168,7 @@ export class AuthService {
   }
   private async getTokensData(data: {
     id: User['_id'];
-    sessionId: Session['id'];
+    sessionId: Session['_id'];
     hash: Session['hash'];
   }) {
     try {
@@ -181,7 +181,7 @@ export class AuthService {
       const [token, refreshToken] = await Promise.all([
         await this.jwtService.signAsync(
           {
-            id: data.id,
+            _id: data.id,
             sessionId: data.sessionId,
           },
           {

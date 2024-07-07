@@ -11,6 +11,10 @@ export type UserSchemaDocument = HydratedDocument<UserSchemaClass>;
 export class UserSchemaClass extends EntityDocumentHelper {
   @ApiResponseProperty({
     type: String,
+  })
+  _id: string;
+  @ApiResponseProperty({
+    type: String,
     example: 'John',
   })
   @Prop({

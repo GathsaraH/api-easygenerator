@@ -6,7 +6,7 @@ import { SessionSchemaClass } from '../schema/session.schema';
 export class SessionMapper {
   static toDomain(raw: SessionSchemaClass): Session {
     const session = new Session();
-    session.id = raw._id.toString();
+    session._id = raw._id.toString();
 
     if (raw.user) {
       session.user = raw.user
@@ -22,8 +22,8 @@ export class SessionMapper {
     const user = new UserSchemaClass();
     user._id = session.user._id.toString();
     const sessionEntity = new SessionSchemaClass();
-    if (session.id && typeof session.id === 'string') {
-      sessionEntity._id = session.id;
+    if (session._id && typeof session._id === 'string') {
+      sessionEntity._id = session._id;
     }
     sessionEntity.user = user;
     sessionEntity.hash = session.hash;

@@ -10,27 +10,27 @@ import { NullableType } from 'src/util/types/nullable.type';
 export class SessionService {
   constructor(private readonly sessionRepository: SessionRepository) {}
 
-  findById(id: Session['id']): Promise<NullableType<Session>> {
-    return this.sessionRepository.findById(id);
+  findById(_id: Session['_id']): Promise<NullableType<Session>> {
+    return this.sessionRepository.findById(_id);
   }
 
   create(
-    data: Omit<Session, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt'>,
+    data: Omit<Session, '_id' | 'createdAt' | 'updatedAt' | 'deletedAt'>,
   ): Promise<Session> {
     return this.sessionRepository.create(data);
   }
 
   update(
-    id: Session['id'],
+    id: Session['_id'],
     payload: Partial<
-      Omit<Session, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt'>
+      Omit<Session, '_id' | 'createdAt' | 'updatedAt' | 'deletedAt'>
     >,
   ): Promise<Session | null> {
     return this.sessionRepository.update(id, payload);
   }
 
-  deleteById(id: Session['id']): Promise<void> {
-    return this.sessionRepository.deleteById(id);
+  deleteById(_id: Session['_id']): Promise<void> {
+    return this.sessionRepository.deleteById(_id);
   }
 
   deleteByUserId(conditions: { userId: User['_id'] }): Promise<void> {
@@ -39,7 +39,7 @@ export class SessionService {
 
   deleteByUserIdWithExclude(conditions: {
     userId: User['_id'];
-    excludeSessionId: Session['id'];
+    excludeSessionId: Session['_id'];
   }): Promise<void> {
     return this.sessionRepository.deleteByUserIdWithExclude(conditions);
   }

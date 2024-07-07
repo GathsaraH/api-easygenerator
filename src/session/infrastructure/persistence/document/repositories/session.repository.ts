@@ -15,8 +15,8 @@ export class SessionDocumentRepository implements SessionRepository {
     private sessionModel: Model<SessionSchemaClass>,
   ) {}
 
-  async findById(id: Session['id']): Promise<NullableType<Session>> {
-    const sessionObject = await this.sessionModel.findById(id);
+  async findById(_id: Session['_id']): Promise<NullableType<Session>> {
+    const sessionObject = await this.sessionModel.findById(_id);
     return sessionObject ? SessionMapper.toDomain(sessionObject) : null;
   }
 
@@ -28,16 +28,16 @@ export class SessionDocumentRepository implements SessionRepository {
   }
 
   async update(
-    id: Session['id'],
+    _id: Session['_id'],
     payload: Partial<Session>,
   ): Promise<Session | null> {
     const clonedPayload = { ...payload };
-    delete clonedPayload.id;
+    delete clonedPayload._id;
     delete clonedPayload.createdAt;
     delete clonedPayload.updatedAt;
     delete clonedPayload.deletedAt;
 
-    const filter = { _id: id.toString() };
+    const filter = { _id: _id.toString() };
     const session = await this.sessionModel.findOne(filter);
 
     if (!session) {
@@ -56,8 +56,8 @@ export class SessionDocumentRepository implements SessionRepository {
     return sessionObject ? SessionMapper.toDomain(sessionObject) : null;
   }
 
-  async deleteById(id: Session['id']): Promise<void> {
-    await this.sessionModel.deleteOne({ _id: id.toString() });
+  async deleteById(_id: Session['_id']): Promise<void> {
+    await this.sessionModel.deleteOne({ _id: _id.toString() });
   }
 
   async deleteByUserId({ userId }: { userId: User['_id'] }): Promise<void> {
@@ -69,7 +69,7 @@ export class SessionDocumentRepository implements SessionRepository {
     excludeSessionId,
   }: {
     userId: User['_id'];
-    excludeSessionId: Session['id'];
+    excludeSessionId: Session['_id'];
   }): Promise<void> {
     const transformedCriteria = {
       user: userId.toString(),
