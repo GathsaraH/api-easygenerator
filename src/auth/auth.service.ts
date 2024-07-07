@@ -17,7 +17,7 @@ import * as bcrypt from 'bcrypt';
 import { LoginResponseDto } from './dto/login-response.dto';
 import * as crypto from 'crypto';
 import { Session } from 'src/session/domain/session';
-import  ms from 'ms';
+import ms from 'ms';
 import { UserSchemaClass as User } from 'src/user/schemas/user.schemas';
 import { JwtRefreshPayloadType } from './strategies/types/jwt-refresh-payload.type';
 import { JwtPayloadType } from './strategies/types/jwt-payload.type';
@@ -67,17 +67,16 @@ export class AuthService {
         hash,
       });
 
-      const { token, refreshToken, tokenExpires } = await this.getTokensData({
-        id: user.id,
+      const { token, refreshToken, tokenExpiresIn } = await this.getTokensData({
+        id: user._id,
         sessionId: session.id,
         hash,
       });
-      const { password, ...exposeUser } = user;
       return {
         refreshToken,
         token,
-        tokenExpires,
-        user
+        tokenExpires: Number(tokenExpiresIn),
+        user,
       };
     } catch (error) {
       this.logger.error(error.message);
@@ -95,7 +94,7 @@ export class AuthService {
       const user = await this.userService.createUser(dto);
       await this.jwtService.signAsync(
         {
-          confirmEmailUserId: user.id,
+          confirmEmailUserId: user._id,
         },
         {
           secret: this.configService.getOrThrow('auth.refreshSecret', {
@@ -135,19 +134,19 @@ export class AuthService {
         .createHash('sha256')
         .update(randomStringGenerator())
         .digest('hex');
-
-      const user = await this.userService.findById(session.user.id);
-
+      this.logger.log(`User ${session.user._id} refreshed token`);
+      const user = await this.userService.findById(session.user._id);
+      this.logger.log(`User ${session.user._id} found`);
       if (!user) {
         throw new UnauthorizedException();
       }
-
+      this.logger.debug(`Updating session ${session.id} with new hash ${hash}`);
       await this.sessionService.update(session.id, {
         hash,
       });
 
-      const { token, refreshToken, tokenExpires } = await this.getTokensData({
-        id: session.user.id,
+      const { token, refreshToken, tokenExpiresIn } = await this.getTokensData({
+        id: session.user._id,
         sessionId: session.id,
         hash,
       });
@@ -155,7 +154,7 @@ export class AuthService {
       return {
         token,
         refreshToken,
-        tokenExpires,
+        tokenExpires: Number(tokenExpiresIn),
       };
     } catch (error) {
       this.logger.error(error.message);
@@ -168,7 +167,7 @@ export class AuthService {
     }
   }
   private async getTokensData(data: {
-    id: User['id'];
+    id: User['_id'];
     sessionId: Session['id'];
     hash: Session['hash'];
   }) {
@@ -179,7 +178,6 @@ export class AuthService {
       });
       this.logger.log(`Token expires in ${tokenExpiresIn}`);
       const tokenExpires = Date.now() + ms(tokenExpiresIn);
-
       const [token, refreshToken] = await Promise.all([
         await this.jwtService.signAsync(
           {
@@ -212,7 +210,7 @@ export class AuthService {
       return {
         token,
         refreshToken,
-        tokenExpires,
+        tokenExpiresIn,
       };
     } catch (error) {
       console.log(error);
@@ -227,8 +225,8 @@ export class AuthService {
   }
   async me(userJwtPayload: JwtPayloadType): Promise<NullableType<User>> {
     try {
-      this.logger.log(`Finding user by id ${userJwtPayload.id}`);
-      return await this.userService.findById(userJwtPayload.id);
+      this.logger.log(`Finding user by id ${userJwtPayload._id}`);
+      return await this.userService.findById(userJwtPayload._id);
     } catch (error) {
       this.logger.error(error.message);
       throw new UnprocessableEntityException({

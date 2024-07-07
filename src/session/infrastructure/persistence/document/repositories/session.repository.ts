@@ -60,7 +60,7 @@ export class SessionDocumentRepository implements SessionRepository {
     await this.sessionModel.deleteOne({ _id: id.toString() });
   }
 
-  async deleteByUserId({ userId }: { userId: User['id'] }): Promise<void> {
+  async deleteByUserId({ userId }: { userId: User['_id'] }): Promise<void> {
     await this.sessionModel.deleteMany({ user: userId.toString() });
   }
 
@@ -68,7 +68,7 @@ export class SessionDocumentRepository implements SessionRepository {
     userId,
     excludeSessionId,
   }: {
-    userId: User['id'];
+    userId: User['_id'];
     excludeSessionId: Session['id'];
   }): Promise<void> {
     const transformedCriteria = {

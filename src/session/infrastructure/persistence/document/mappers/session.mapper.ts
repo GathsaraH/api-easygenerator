@@ -20,7 +20,7 @@ export class SessionMapper {
   }
   static toPersistence(session: Session): SessionSchemaClass {
     const user = new UserSchemaClass();
-    user._id = session.user.id.toString();
+    user._id = session.user._id.toString();
     const sessionEntity = new SessionSchemaClass();
     if (session.id && typeof session.id === 'string') {
       sessionEntity._id = session.id;

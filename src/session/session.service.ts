@@ -33,12 +33,12 @@ export class SessionService {
     return this.sessionRepository.deleteById(id);
   }
 
-  deleteByUserId(conditions: { userId: User['id'] }): Promise<void> {
+  deleteByUserId(conditions: { userId: User['_id'] }): Promise<void> {
     return this.sessionRepository.deleteByUserId(conditions);
   }
 
   deleteByUserIdWithExclude(conditions: {
-    userId: User['id'];
+    userId: User['_id'];
     excludeSessionId: Session['id'];
   }): Promise<void> {
     return this.sessionRepository.deleteByUserIdWithExclude(conditions);
