@@ -4,6 +4,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
 import { AllConfigType } from 'src/config/app-config/config.type';
 import { OrNeverType } from 'src/util/types/or-never.type';
+import { JwtRefreshPayloadType } from './types/jwt-refresh-payload.type';
 
 @Injectable()
 export class JwtRefreshStrategy extends PassportStrategy(
@@ -18,8 +19,8 @@ export class JwtRefreshStrategy extends PassportStrategy(
   }
 
   public validate(
-    payload,
-  ): OrNeverType<any> {
+    payload:JwtRefreshPayloadType,
+  ): OrNeverType<JwtRefreshPayloadType> {
     if (!payload.sessionId) {
       throw new UnauthorizedException();
     }

@@ -1,34 +1,79 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  SerializeOptions,
+  HttpCode,
+  HttpStatus,
+  Get,
+  UseGuards,
+  Request
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { CreateAuthDto } from './dto/create-auth.dto';
-import { UpdateAuthDto } from './dto/update-auth.dto';
-
-@Controller('auth')
+import { ApiTags,ApiOkResponse,ApiBearerAuth } from '@nestjs/swagger';
+import { AuthRegisterLoginDto } from './dto/auth-register-login.dto';
+import { LoginResponseDto } from './dto/login-response.dto';
+import { AuthLoginDto } from './dto/auth-login.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { UserSchemaClass as User } from 'src/user/schemas/user.schemas';
+import { RefreshResponseDto } from './dto/refresh-response.dto';
+import { NullableType } from 'src/util/types/nullable.type';
+@ApiTags('Auth')
+@Controller({
+  path: 'auth',
+  version: '1',
+})
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post()
-  create(@Body() createAuthDto: CreateAuthDto) {
-    return this.authService.create(createAuthDto);
+  @SerializeOptions({
+    groups: ['me'],
+  })
+  @Post('email/login')
+  @ApiOkResponse({
+    type: LoginResponseDto,
+  })
+  @HttpCode(HttpStatus.OK)
+  public login(@Body() loginDto: AuthLoginDto): Promise<LoginResponseDto> {
+    return this.authService.validateLogin(loginDto);
   }
 
-  @Get()
-  findAll() {
-    return this.authService.findAll();
+  @Post('register')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async register(@Body() dto: AuthRegisterLoginDto): Promise<void> {
+    return this.authService.register(dto);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.authService.findOne(+id);
+  @ApiBearerAuth()
+  @SerializeOptions({
+    groups: ['me'],
+  })
+  @Get('me')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiOkResponse({
+    type: User,
+  })
+  @HttpCode(HttpStatus.OK)
+  public me(@Request() request): Promise<NullableType<User>> {
+    return this.authService.me(request.user);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAuthDto: UpdateAuthDto) {
-    return this.authService.update(+id, updateAuthDto);
+  @ApiBearerAuth()
+  @ApiOkResponse({
+    type: RefreshResponseDto,
+  })
+  @SerializeOptions({
+    groups: ['me'],
+  })
+  @Post('refresh')
+  @UseGuards(AuthGuard('jwt-refresh'))
+  @HttpCode(HttpStatus.OK)
+  public refresh(@Request() request): Promise<RefreshResponseDto> {
+    return this.authService.refreshToken({
+      sessionId: request.user.sessionId,
+      hash: request.user.hash,
+    });
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.authService.remove(+id);
-  }
+
 }

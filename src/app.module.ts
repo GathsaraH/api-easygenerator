@@ -8,6 +8,7 @@ import { DatabaseModule } from './config/database-config/database.module';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import authConfig from './config/auth-config/auth.config';
+import { SessionModule } from './session/session.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import authConfig from './config/auth-config/auth.config';
     DatabaseModule,
     AuthModule,
     UserModule,
+    SessionModule
   ],
   controllers: [AppController],
   providers: [AppService],

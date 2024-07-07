@@ -19,8 +19,7 @@ export class UserSchemaClass extends EntityDocumentHelper {
   @Prop({
     type: String,
   })
-  firstName: string;
-
+  name: string;
   @ApiResponseProperty({
     type: String,
     example: 'john.doe@example.com',
@@ -33,7 +32,7 @@ export class UserSchemaClass extends EntityDocumentHelper {
   email: string;
   @Exclude({ toPlainOnly: true })
   @Prop()
-  password?: string;
+  password: string;
   @ApiResponseProperty()
   @Prop({ default: now })
   updatedAt: Date;

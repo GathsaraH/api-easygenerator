@@ -2,7 +2,6 @@ import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import { ValidationPipe } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import * as bodyParser from "body-parser";
 import { setupSwagger } from "./config/swagger-config/swagger";
 
 global["fetch"] = require("node-fetch");
